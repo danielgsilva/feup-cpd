@@ -1,12 +1,12 @@
 import java.util.Scanner;
 
-public class MatrixMultiplication {
+public class matrixproduct {
 
     public static void onMultLine(int mAr, int mBr) {
         double[][] pha = new double[mAr][mAr];
         double[][] phb = new double[mAr][mAr];
         double[][] phc = new double[mAr][mAr];
-        
+
         for (int i=0; i<mAr; i++)
             for (int j=0; j<mAr; j++)
                 pha[i][j] = 1.0;
