@@ -25,7 +25,6 @@ public class matrixproduct {
                 }
             }
         }
-
         long end = System.nanoTime();
         System.out.printf("Time: %.3f seconds\n", (end - start) / 1e9);
 
@@ -78,7 +77,9 @@ public class matrixproduct {
             System.out.println("2. Line Multiplication");
             System.out.print("Selection?: ");
             option=scanner.nextInt();
-            if(option==0){break;}
+            if(option==0){
+                break;
+            }
             System.out.print("Dimensions (rows=cols)?: ");
             int size=scanner.nextInt();
             switch(option){
