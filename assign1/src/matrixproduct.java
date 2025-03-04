@@ -1,6 +1,41 @@
 import java.util.Scanner;
 
 public class matrixproduct {
+    
+    public static void onMult(int size) {
+        double[][] pha = new double[size][size];
+        double[][] phb = new double[size][size];
+        double[][] phc = new double[size][size];
+
+        for (int i = 0; i < size; i++)
+            for (int j = 0; j < size; j++)
+                pha[i][j] = 1.0;
+
+        for (int i = 0; i < size; i++)
+            for (int j = 0; j < size; j++)
+                phb[i][j] = i + 1;
+
+        long start = System.nanoTime();
+
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                phc[i][j] = 0;
+                for (int k = 0; k < size; k++) {
+                    phc[i][j] += pha[i][k] * phb[k][j];
+                }
+            }
+        }
+
+        long end = System.nanoTime();
+        System.out.printf("Time: %.3f seconds\n", (end - start) / 1e9);
+
+        System.out.println("Result matrix:");
+        for (int j = 0; j < Math.min(10, size); j++) {
+            System.out.print(phc[0][j] + " ");
+        }
+        System.out.println();
+    }
+
 
     public static void onMultLine(int mAr, int mBr) {
         double[][] pha = new double[mAr][mAr];
@@ -48,7 +83,7 @@ public class matrixproduct {
             int size=scanner.nextInt();
             switch(option){
                 case 1:
-                    //onMult(size, size);
+                    onMult(size);
                     break;
                 case 2:
                     onMultLine(size, size);
