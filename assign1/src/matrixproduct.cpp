@@ -203,7 +203,7 @@ void OnMultBlock(int m_ar, int m_br, int bkSize)
 	free(phb);
 	free(phc);
 }
-
+/*
 void OnMultLineOMP1(int m_ar, int m_br)
 {
 	SYSTEMTIME2 Time1, Time2;
@@ -226,7 +226,7 @@ void OnMultLineOMP1(int m_ar, int m_br)
 		for (j = 0; j < m_br; j++)
 			phb[i * m_br + j] = (double)(i + 1);
 
-	/*
+	
 	double exemploA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
 	double exemploB[9] = {9, 8, 7, 6, 5, 4, 3, 2, 1};
 	// double resultado[9] = {30, 24, 18, 84, 69, 54, 138, 114, 90};
@@ -237,7 +237,7 @@ void OnMultLineOMP1(int m_ar, int m_br)
 			pha[i * m_ar + j] = exemploA[i * m_ar + j];
 			phb[i * m_br + j] = exemploB[i * m_br + j];
 		}
-	*/
+	
 
 	Time1 = omp_get_wtime();
 
@@ -269,7 +269,7 @@ void OnMultLineOMP1(int m_ar, int m_br)
 	cout << endl;
 	
 
-	/*
+	
 	// display all elements of the result matrix to verify correctness
 	cout << "Result matrix: " << endl;
 	for (i = 0; i < m_ar; i++)
@@ -278,7 +278,7 @@ void OnMultLineOMP1(int m_ar, int m_br)
 			cout << phc[i * m_ar + j] << " ";
 		cout << endl;
 	}
-	*/
+	
 
 	free(pha);
 	free(phb);
@@ -307,7 +307,7 @@ void OnMultLineOMP2(int m_ar, int m_br)
 		for (j = 0; j < m_br; j++)
 			phb[i * m_br + j] = (double)(i + 1);
 
-	/*
+	
 	double exemploA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
 	double exemploB[9] = {9, 8, 7, 6, 5, 4, 3, 2, 1};
 	// double resultado[9] = {30, 24, 18, 84, 69, 54, 138, 114, 90};
@@ -318,7 +318,7 @@ void OnMultLineOMP2(int m_ar, int m_br)
 			pha[i * m_ar + j] = exemploA[i * m_ar + j];
 			phb[i * m_br + j] = exemploB[i * m_br + j];
 		}
-	*/
+	
 
 	Time1 = omp_get_wtime();
 
@@ -350,7 +350,7 @@ void OnMultLineOMP2(int m_ar, int m_br)
 	}
 	cout << endl;
 	
-	/*
+	
 	// display all elements of the result matrix to verify correctness
 	cout << "Result matrix: " << endl;
 	for (i = 0; i < m_ar; i++)
@@ -359,12 +359,12 @@ void OnMultLineOMP2(int m_ar, int m_br)
 			cout << phc[i * m_ar + j] << " ";
 		cout << endl;
 	}
-	*/
+	
 
 	free(pha);
 	free(phb);
 	free(phc);
-}
+}*/
 
 void handle_error(int retval)
 {
@@ -451,10 +451,10 @@ int main(int argc, char *argv[])
 			OnMultBlock(lin, col, blockSize);
 			break;
 		case 4:
-			OnMultLineOMP1(lin, col);
+			//OnMultLineOMP1(lin, col);
 			break;
 		case 5:
-			OnMultLineOMP2(lin, col);
+			//OnMultLineOMP2(lin, col);
 			break;
 		}
 

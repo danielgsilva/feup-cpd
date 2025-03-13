@@ -2,36 +2,43 @@ import java.util.Scanner;
 
 public class matrixproduct {
     
+
     public static void onMult(int size) {
-        double[][] pha = new double[size][size];
-        double[][] phb = new double[size][size];
-        double[][] phc = new double[size][size];
+        double[] pha = new double[size * size];
+        double[] phb = new double[size * size];
+        double[] phc = new double[size * size];
 
         for (int i = 0; i < size; i++)
             for (int j = 0; j < size; j++)
-                pha[i][j] = 1.0;
+                pha[i * size + j] = 1.0;
 
         for (int i = 0; i < size; i++)
             for (int j = 0; j < size; j++)
-                phb[i][j] = i + 1;
+                phb[i * size + j] = i + 1;
 
         long start = System.nanoTime();
 
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
-                phc[i][j] = 0;
+                double sum = 0;
                 for (int k = 0; k < size; k++) {
-                    phc[i][j] += pha[i][k] * phb[k][j];
+                    sum += pha[i * size + k] * phb[k * size + j];
                 }
+                phc[i * size + j] = sum;
             }
         }
 
         long end = System.nanoTime();
-        System.out.printf("Time: %.3f seconds\n", (end - start) / 1e9);
+        double timeInSeconds = (end - start) / 1e9;
+        
+        double gflops = (2.0 * size * size * size) / (timeInSeconds * 1e9);
+    
+        System.out.printf("Time: %.3f seconds\n", timeInSeconds);
+        System.out.printf("Performance: %.3f GFLOPS\n", gflops);
 
         System.out.println("Result matrix:");
         for (int j = 0; j < Math.min(10, size); j++) {
-            System.out.print(phc[0][j] + " ");
+            System.out.print(phc[j] + " ");
         }
         System.out.println();
     }
@@ -60,8 +67,13 @@ public class matrixproduct {
             }
         }
 
-        long end=System.nanoTime();
-        System.out.printf("Time: %.3f seconds\n", (end-start)/1e9);
+        long end = System.nanoTime();
+        double timeInSeconds = (end - start) / 1e9;
+        
+        double gflops = (2.0 * mAr * mAr * mBr) / (timeInSeconds * 1e9);
+    
+        System.out.printf("Time: %.3f seconds\n", timeInSeconds);
+        System.out.printf("Performance: %.3f GFLOPS\n", gflops);
         System.out.println("Result matrix:");
         for (int j = 0; j < Math.min(10, mBr); j++) {
             System.out.print(phc[0][j] + " ");
