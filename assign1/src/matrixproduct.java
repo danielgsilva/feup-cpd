@@ -3,26 +3,27 @@ import java.util.Scanner;
 public class matrixproduct {
     
     public static void onMult(int size) {
-        double[][] pha = new double[size][size];
-        double[][] phb = new double[size][size];
-        double[][] phc = new double[size][size];
+        double[] pha = new double[size * size];
+        double[] phb = new double[size * size];
+        double[] phc = new double[size * size];
 
         for (int i = 0; i < size; i++)
             for (int j = 0; j < size; j++)
-                pha[i][j] = 1.0;
+                pha[i * size + j] = 1.0;
 
         for (int i = 0; i < size; i++)
             for (int j = 0; j < size; j++)
-                phb[i][j] = i + 1;
+                phb[i * size + j] = i + 1;
 
         long start = System.nanoTime();
 
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
-                phc[i][j] = 0;
+                double sum = 0;
                 for (int k = 0; k < size; k++) {
-                    phc[i][j] += pha[i][k] * phb[k][j];
+                    sum += pha[i * size + k] * phb[k * size + j];
                 }
+                phc[i * size + j] = sum;
             }
         }
 
@@ -31,7 +32,7 @@ public class matrixproduct {
 
         System.out.println("Result matrix:");
         for (int j = 0; j < Math.min(10, size); j++) {
-            System.out.print(phc[0][j] + " ");
+            System.out.print(phc[j] + " ");
         }
         System.out.println();
     }
@@ -78,7 +79,9 @@ public class matrixproduct {
             System.out.println("2. Line Multiplication");
             System.out.print("Selection?: ");
             option=scanner.nextInt();
-            if(option==0){break;}
+            if(option==0){
+                break;
+            }
             System.out.print("Dimensions (rows=cols)?: ");
             int size=scanner.nextInt();
             switch(option){
