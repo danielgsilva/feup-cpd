@@ -105,8 +105,12 @@ void OnMultLine(int m_ar, int m_br)
 	}
 
 	Time2 = clock();
-	sprintf(st, "Time: %3.3f seconds\n", (double)(Time2 - Time1) / CLOCKS_PER_SEC);
-	cout << st;
+    double timeInSeconds = (double)(Time2 - Time1) / CLOCKS_PER_SEC;
+    double gflops = (2.0 * m_ar * m_ar * m_br) / (timeInSeconds * 1e9);
+
+    sprintf(st, "Time: %3.3f seconds\n", timeInSeconds);
+    cout << st;
+    cout << "Performance: " << gflops << " GFLOPS" << endl;
 
 	// display 10 elements of the result matrix tto verify correctness
 	cout << "Result matrix: " << endl;
