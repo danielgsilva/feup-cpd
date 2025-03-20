@@ -13,7 +13,6 @@ using namespace std;
 
 void OnMult(int m_ar, int m_br)
 {
-
 	SYSTEMTIME Time1, Time2;
 
 	char st[100];
@@ -73,147 +72,6 @@ void OnMultLine(int m_ar, int m_br)
 	SYSTEMTIME Time1, Time2;
 
 	char st[100];
-	double temp;
-	int i, j, k;
-
-	double *pha, *phb, *phc;
-
-	pha = (double *)malloc((m_ar * m_ar) * sizeof(double));
-	phb = (double *)malloc((m_ar * m_ar) * sizeof(double));
-	phc = (double *)malloc((m_ar * m_ar) * sizeof(double));
-
-	for (i = 0; i < m_ar; i++)
-		for (j = 0; j < m_ar; j++)
-			pha[i * m_ar + j] = (double)1.0;
-
-	for (i = 0; i < m_br; i++)
-		for (j = 0; j < m_br; j++)
-			phb[i * m_br + j] = (double)(i + 1);
-
-	Time1 = clock();
-
-	for (i = 0; i < m_ar; i++)
-	{
-		for (k = 0; k < m_ar; k++)
-		{
-			temp = pha[i * m_ar + k];
-			for (j = 0; j < m_br; j++)
-			{
-				phc[i * m_br + j] += temp * phb[k * m_br + j];
-			}
-		}
-	}
-
-	Time2 = clock();
-    double timeInSeconds = (double)(Time2 - Time1) / CLOCKS_PER_SEC;
-    double gflops = (2.0 * m_ar * m_ar * m_br) / (timeInSeconds * 1e9);
-
-    sprintf(st, "Time: %3.3f seconds\n", timeInSeconds);
-    cout << st;
-    cout << "Performance: " << gflops << " GFLOPS" << endl;
-
-	// display 10 elements of the result matrix tto verify correctness
-	cout << "Result matrix: " << endl;
-	for (i = 0; i < 1; i++)
-	{
-		for (j = 0; j < min(10, m_br); j++)
-			cout << phc[j] << " ";
-	}
-	cout << endl;
-
-	/*// display all elements of the result matrix tto verify correctness
-	cout << "Result matrix: " << endl;
-	for (i = 0; i < m_ar; i++)
-	{
-		for (j = 0; j < m_br; j++)
-			cout << phc[i * m_ar + j] << " ";
-		cout << endl;
-	}*/
-
-	free(pha);
-	free(phb);
-	free(phc);
-}
-
-// add code here for block x block matriz multiplication
-void OnMultBlock(int m_ar, int m_br, int bkSize)
-{
-	SYSTEMTIME Time1, Time2;
-
-	char st[100];
-	double temp;
-	int i, j, k, ii, jj, kk;
-
-	double *pha, *phb, *phc;
-
-	pha = (double *)malloc((m_ar * m_ar) * sizeof(double));
-	phb = (double *)malloc((m_ar * m_ar) * sizeof(double));
-	phc = (double *)malloc((m_ar * m_ar) * sizeof(double));
-
-	for (i = 0; i < m_ar; i++)
-		for (j = 0; j < m_ar; j++)
-			pha[i * m_ar + j] = (double)1.0;
-
-	for (i = 0; i < m_br; i++)
-		for (j = 0; j < m_br; j++)
-			phb[i * m_br + j] = (double)(i + 1);
-
-	/*
-	double exemploA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-	double exemploB[9] = {9, 8, 7, 6, 5, 4, 3, 2, 1};
-	//double resultado[9] = {30, 24, 18, 84, 69, 54, 138, 114, 90};
-
-	for (i = 0; i < m_ar; i++)
-		for (j = 0; j < m_br; j++)
-		{
-			pha[i * m_ar + j] = exemploA[i * m_ar + j];
-			phb[i * m_br + j] = exemploB[i * m_br + j];
-		}
-	*/
-
-	Time1 = clock();
-
-	for (ii = 0; ii < m_ar; ii += bkSize)
-		for (jj = 0; jj < m_br; jj += bkSize)
-			for (kk = 0; kk < m_ar; kk += bkSize)
-				for (i = ii; i < min(ii + bkSize, m_ar); i++)
-					for (j = jj; j < min(jj + bkSize, m_br); j++)
-						for (k = kk; k < min(kk + bkSize, m_ar); k++)
-							phc[i * m_ar + j] += pha[i * m_ar + k] * phb[k * m_br + j];
-
-	Time2 = clock();
-	sprintf(st, "Time: %3.3f seconds\n", (double)(Time2 - Time1) / CLOCKS_PER_SEC);
-	cout << st;
-
-	// display 10 elements of the result matrix tto verify correctness
-	cout << "Result matrix: " << endl;
-	for (i = 0; i < 1; i++)
-	{
-		for (j = 0; j < min(10, m_br); j++)
-			cout << phc[j] << " ";
-	}
-	cout << endl;
-
-	/*// display all elements of the result matrix tto verify correctness
-	cout << "Result matrix: " << endl;
-	for (i = 0; i < m_ar; i++)
-	{
-		for (j = 0; j < m_br; j++)
-			cout << phc[i * m_ar + j] << " ";
-		cout << endl;
-	}*/
-
-	free(pha);
-	free(phb);
-	free(phc);
-}
-/*
-void OnMultLineOMP1(int m_ar, int m_br)
-{
-	SYSTEMTIME2 Time1, Time2;
-
-	char st[100];
-	double temp;
 	int i, j, k;
 
 	double *pha, *phb, *phc;
@@ -230,18 +88,172 @@ void OnMultLineOMP1(int m_ar, int m_br)
 		for (j = 0; j < m_br; j++)
 			phb[i * m_br + j] = (double)(i + 1);
 
-	
-	double exemploA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-	double exemploB[9] = {9, 8, 7, 6, 5, 4, 3, 2, 1};
-	// double resultado[9] = {30, 24, 18, 84, 69, 54, 138, 114, 90};
+	/*
+	double matrixA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+	double matrixB[9] = {9, 8, 7, 6, 5, 4, 3, 2, 1};
+	//double resultado[9] = {30, 24, 18, 84, 69, 54, 138, 114, 90};
 
 	for (i = 0; i < m_ar; i++)
 		for (j = 0; j < m_br; j++)
 		{
-			pha[i * m_ar + j] = exemploA[i * m_ar + j];
-			phb[i * m_br + j] = exemploB[i * m_br + j];
+			pha[i * m_ar + j] = matrixA[i * m_ar + j];
+			phb[i * m_br + j] = matrixB[i * m_br + j];
 		}
-	
+	*/
+
+	Time1 = clock();
+
+	for (i = 0; i < m_ar; i++)
+	{
+		for (k = 0; k < m_ar; k++)
+		{
+			for (j = 0; j < m_br; j++)
+			{
+				phc[i * m_ar + j] += pha[i * m_ar + k] * phb[k * m_br + j];
+			}
+		}
+	}
+
+	Time2 = clock();
+	double timeInSeconds = (double)(Time2 - Time1) / CLOCKS_PER_SEC;
+	double gflops = (2.0 * m_ar * m_ar * m_br) / (timeInSeconds * 1e9);
+
+	sprintf(st, "Time: %3.3f seconds\n", timeInSeconds);
+	cout << st;
+	cout << "Performance: " << gflops << " GFLOPS" << endl;
+
+	// display 10 elements of the result matrix to verify correctness
+	cout << "Result matrix: " << endl;
+	for (i = 0; i < 1; i++)
+	{
+		for (j = 0; j < min(10, m_br); j++)
+			cout << phc[j] << " ";
+	}
+	cout << endl;
+
+	/*
+	// display all elements of the result matrix tto verify correctness
+	cout << "Result matrix: " << endl;
+	for (i = 0; i < m_ar; i++)
+	{
+		for (j = 0; j < m_br; j++)
+			cout << phc[i * m_ar + j] << " ";
+		cout << endl;
+	}
+	*/
+
+	free(pha);
+	free(phb);
+	free(phc);
+}
+
+// add code here for block x block matriz multiplication
+void OnMultBlock(int m_ar, int m_br, int bkSize)
+{
+	SYSTEMTIME Time1, Time2;
+
+	char st[100];
+	int i, j, k, ii, jj, kk;
+
+	double *pha, *phb, *phc;
+
+	pha = (double *)malloc((m_ar * m_ar) * sizeof(double));
+	phb = (double *)malloc((m_ar * m_ar) * sizeof(double));
+	phc = (double *)calloc((m_ar * m_ar), sizeof(double));
+
+	for (i = 0; i < m_ar; i++)
+		for (j = 0; j < m_ar; j++)
+			pha[i * m_ar + j] = (double)1.0;
+
+	for (i = 0; i < m_br; i++)
+		for (j = 0; j < m_br; j++)
+			phb[i * m_br + j] = (double)(i + 1);
+
+	/*
+	double matrixA[16] = {1, 2, 2, 7, 1, 5, 6, 2, 3, 3, 4, 5, 3, 3, 6, 7};
+	double matrixB[16] = {3, 1, 1, 4, 7, 4, 5, 3, 2, 4, 2, 4, 3, 1, 8, 5};
+	//double resultado[16] = {42, 24, 71, 53, 56, 47, 54, 53, 53, 36, 66, 62, 63, 46, 86, 80};
+
+	for (i = 0; i < m_ar; i++)
+		for (j = 0; j < m_br; j++)
+		{
+			pha[i * m_ar + j] = matrixA[i * m_ar + j];
+			phb[i * m_br + j] = matrixB[i * m_br + j];
+		}
+	*/
+
+	Time1 = clock();
+
+	for (ii = 0; ii < m_ar; ii += bkSize)
+		for (kk = 0; kk < m_ar; kk += bkSize)
+			for (jj = 0; jj < m_br; jj += bkSize)
+				for (i = ii; i < min(ii + bkSize, m_ar); i++)
+					for (k = kk; k < min(kk + bkSize, m_ar); k++)
+						for (j = jj; j < min(jj + bkSize, m_br); j++)
+							phc[i * m_ar + j] += pha[i * m_ar + k] * phb[k * m_br + j];
+
+	Time2 = clock();
+	sprintf(st, "Time: %3.3f seconds\n", (double)(Time2 - Time1) / CLOCKS_PER_SEC);
+	cout << st;
+
+	// display 10 elements of the result matrix tto verify correctness
+	cout << "Result matrix: " << endl;
+	for (i = 0; i < 1; i++)
+	{
+		for (j = 0; j < min(10, m_br); j++)
+			cout << phc[j] << " ";
+	}
+	cout << endl;
+
+	/*
+	// display all elements of the result matrix to verify correctness
+	cout << "Result matrix: " << endl;
+	for (i = 0; i < m_ar; i++)
+	{
+		for (j = 0; j < m_br; j++)
+			cout << phc[i * m_ar + j] << " ";
+		cout << endl;
+	}
+	*/
+
+	free(pha);
+	free(phb);
+	free(phc);
+}
+
+void OnMultLineOMP1(int m_ar, int m_br)
+{
+	SYSTEMTIME2 Time1, Time2;
+
+	char st[100];
+	int i, j, k;
+
+	double *pha, *phb, *phc;
+
+	pha = (double *)malloc((m_ar * m_ar) * sizeof(double));
+	phb = (double *)malloc((m_ar * m_ar) * sizeof(double));
+	phc = (double *)calloc((m_ar * m_ar), sizeof(double));
+
+	for (i = 0; i < m_ar; i++)
+		for (j = 0; j < m_ar; j++)
+			pha[i * m_ar + j] = (double)1.0;
+
+	for (i = 0; i < m_br; i++)
+		for (j = 0; j < m_br; j++)
+			phb[i * m_br + j] = (double)(i + 1);
+
+	/*
+	double matrixA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+	double matrixB[9] = {9, 8, 7, 6, 5, 4, 3, 2, 1};
+	//double resultado[9] = {30, 24, 18, 84, 69, 54, 138, 114, 90};
+
+	for (i = 0; i < m_ar; i++)
+		for (j = 0; j < m_br; j++)
+		{
+			pha[i * m_ar + j] = matrixA[i * m_ar + j];
+			phb[i * m_br + j] = matrixB[i * m_br + j];
+		}
+	*/
 
 	Time1 = omp_get_wtime();
 
@@ -262,7 +274,6 @@ void OnMultLineOMP1(int m_ar, int m_br)
 	sprintf(st, "Time: %3.3f seconds\n", Time2 - Time1);
 	cout << st;
 
-	
 	// display 10 elements of the result matrix tto verify correctness
 	cout << "Result matrix: " << endl;
 	for (i = 0; i < 1; i++)
@@ -271,9 +282,8 @@ void OnMultLineOMP1(int m_ar, int m_br)
 			cout << phc[j] << " ";
 	}
 	cout << endl;
-	
 
-	
+	/*
 	// display all elements of the result matrix to verify correctness
 	cout << "Result matrix: " << endl;
 	for (i = 0; i < m_ar; i++)
@@ -282,7 +292,7 @@ void OnMultLineOMP1(int m_ar, int m_br)
 			cout << phc[i * m_ar + j] << " ";
 		cout << endl;
 	}
-	
+	*/
 
 	free(pha);
 	free(phb);
@@ -294,7 +304,6 @@ void OnMultLineOMP2(int m_ar, int m_br)
 	SYSTEMTIME2 Time1, Time2;
 
 	char st[100];
-	double temp;
 	int i, j, k;
 
 	double *pha, *phb, *phc;
@@ -311,18 +320,18 @@ void OnMultLineOMP2(int m_ar, int m_br)
 		for (j = 0; j < m_br; j++)
 			phb[i * m_br + j] = (double)(i + 1);
 
-	
-	double exemploA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-	double exemploB[9] = {9, 8, 7, 6, 5, 4, 3, 2, 1};
-	// double resultado[9] = {30, 24, 18, 84, 69, 54, 138, 114, 90};
+	/*
+	double matrixA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+	double matrixB[9] = {9, 8, 7, 6, 5, 4, 3, 2, 1};
+	//double resultado[9] = {30, 24, 18, 84, 69, 54, 138, 114, 90};
 
 	for (i = 0; i < m_ar; i++)
 		for (j = 0; j < m_br; j++)
 		{
-			pha[i * m_ar + j] = exemploA[i * m_ar + j];
-			phb[i * m_br + j] = exemploB[i * m_br + j];
+			pha[i * m_ar + j] = matrixA[i * m_ar + j];
+			phb[i * m_br + j] = matrixB[i * m_br + j];
 		}
-	
+	*/
 
 	Time1 = omp_get_wtime();
 
@@ -344,7 +353,6 @@ void OnMultLineOMP2(int m_ar, int m_br)
 	sprintf(st, "Time: %3.3f seconds\n", Time2 - Time1);
 	cout << st;
 
-	
 	// display 10 elements of the result matrix tto verify correctness
 	cout << "Result matrix: " << endl;
 	for (i = 0; i < 1; i++)
@@ -353,8 +361,8 @@ void OnMultLineOMP2(int m_ar, int m_br)
 			cout << phc[j] << " ";
 	}
 	cout << endl;
-	
-	
+
+	/*
 	// display all elements of the result matrix to verify correctness
 	cout << "Result matrix: " << endl;
 	for (i = 0; i < m_ar; i++)
@@ -363,12 +371,12 @@ void OnMultLineOMP2(int m_ar, int m_br)
 			cout << phc[i * m_ar + j] << " ";
 		cout << endl;
 	}
-	
+	*/
 
 	free(pha);
 	free(phb);
 	free(phc);
-}*/
+}
 
 void handle_error(int retval)
 {
@@ -455,10 +463,10 @@ int main(int argc, char *argv[])
 			OnMultBlock(lin, col, blockSize);
 			break;
 		case 4:
-			//OnMultLineOMP1(lin, col);
+			OnMultLineOMP1(lin, col);
 			break;
 		case 5:
-			//OnMultLineOMP2(lin, col);
+			OnMultLineOMP2(lin, col);
 			break;
 		}
 
