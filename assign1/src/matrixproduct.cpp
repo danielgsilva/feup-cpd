@@ -52,7 +52,7 @@ void OnMult(int m_ar, int m_br)
 	sprintf(st, "Time: %3.3f seconds\n", (double)(Time2 - Time1) / CLOCKS_PER_SEC);
 	cout << st;
 
-	// display 10 elements of the result matrix tto verify correctness
+	// display 10 elements of the result matrix to verify correctness
 	cout << "Result matrix: " << endl;
 	for (i = 0; i < 1; i++)
 	{
@@ -88,7 +88,8 @@ void OnMultLine(int m_ar, int m_br)
 		for (j = 0; j < m_br; j++)
 			phb[i * m_br + j] = (double)(i + 1);
 
-	/*
+	/* exemplo:
+
 	double matrixA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
 	double matrixB[9] = {9, 8, 7, 6, 5, 4, 3, 2, 1};
 	//double resultado[9] = {30, 24, 18, 84, 69, 54, 138, 114, 90};
@@ -169,7 +170,8 @@ void OnMultBlock(int m_ar, int m_br, int bkSize)
 		for (j = 0; j < m_br; j++)
 			phb[i * m_br + j] = (double)(i + 1);
 
-	/*
+	/* exemplo: 
+
 	double matrixA[16] = {1, 2, 2, 7, 1, 5, 6, 2, 3, 3, 4, 5, 3, 3, 6, 7};
 	double matrixB[16] = {3, 1, 1, 4, 7, 4, 5, 3, 2, 4, 2, 4, 3, 1, 8, 5};
 	//double resultado[16] = {42, 24, 71, 53, 56, 47, 54, 53, 53, 36, 66, 62, 63, 46, 86, 80};
@@ -206,7 +208,7 @@ void OnMultBlock(int m_ar, int m_br, int bkSize)
 	cout << endl;
 
 	/*
-	// display all elements of the result matrix to verify correctness
+	//display all elements of the result matrix to verify correctness
 	cout << "Result matrix: " << endl;
 	for (i = 0; i < m_ar; i++)
 	{
@@ -242,7 +244,8 @@ void OnMultLineOMP1(int m_ar, int m_br)
 		for (j = 0; j < m_br; j++)
 			phb[i * m_br + j] = (double)(i + 1);
 
-	/*
+	/* exemplo:
+
 	double matrixA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
 	double matrixB[9] = {9, 8, 7, 6, 5, 4, 3, 2, 1};
 	//double resultado[9] = {30, 24, 18, 84, 69, 54, 138, 114, 90};
@@ -320,7 +323,8 @@ void OnMultLineOMP2(int m_ar, int m_br)
 		for (j = 0; j < m_br; j++)
 			phb[i * m_br + j] = (double)(i + 1);
 
-	/*
+	/* exemplo:
+	
 	double matrixA[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
 	double matrixB[9] = {9, 8, 7, 6, 5, 4, 3, 2, 1};
 	//double resultado[9] = {30, 24, 18, 84, 69, 54, 138, 114, 90};
