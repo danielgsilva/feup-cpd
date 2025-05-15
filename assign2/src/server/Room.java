@@ -16,6 +16,8 @@ public class Room {
     public void join(ClientHandler client) {
         lock.lock();
         try {
+            // Remove o antigo client com mesmo username se existir
+            clients.removeIf(c -> c.getUsername().equals(client.getUsername()));
             clients.add(client);
             broadcast("[Server] " + client.getUsername() + " has entered the room.");
         } finally {
@@ -59,6 +61,5 @@ public class Room {
 
     public String getName() {
         return name;
-    }    
-    
+    }
 }
