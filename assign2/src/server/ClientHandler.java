@@ -112,7 +112,7 @@ public class ClientHandler implements Runnable {
 
     private void showHelp() {
         out.println("[Server] Available commands:");
-        out.println("  /join <roomName> - Change to another room or create a new one");
+        out.println("  /join <roomName> - Go to an existing or create a new one");
         out.println("  /members         - List current members of the room");
         out.println("  /help            - Show this help");
         out.println("  /quit            - Leave the chat");
