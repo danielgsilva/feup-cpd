@@ -2,6 +2,7 @@ package src.server;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Set;
 
 public class ClientHandler implements Runnable {
     private final Socket socket;
@@ -74,6 +75,14 @@ public class ClientHandler implements Runnable {
                     currentRoom = newRoom;
                     currentRoom.join(this);
                     out.println("[Server] You have joined room: " + newRoomName);
+                } 
+                else if (message.equalsIgnoreCase("/members")) {
+                    Set<String> members = currentRoom.getMemberUsernames();
+                    out.println("[Server] Members in room '" + currentRoom.getName() + "':");
+                    for (String member : members) {
+                        out.println("  - " + member);
+                    }
+
                 } else if (message.equalsIgnoreCase("/quit")) {
                     out.println("[Server] Exiting...");
                     break;
@@ -104,6 +113,7 @@ public class ClientHandler implements Runnable {
     private void showHelp() {
         out.println("[Server] Available commands:");
         out.println("  /join <roomName> - Change to another room or create a new one");
+        out.println("  /members         - List current members of the room");
         out.println("  /help            - Show this help");
         out.println("  /quit            - Leave the chat");
     }

@@ -43,4 +43,22 @@ public class Room {
             lock.unlock();
         }
     }
+
+    public Set<String> getMemberUsernames() {
+        lock.lock();
+        try {
+            Set<String> usernames = new HashSet<>();
+            for (ClientHandler client : clients) {
+                usernames.add(client.getUsername());
+            }
+            return usernames;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public String getName() {
+        return name;
+    }    
+    
 }
