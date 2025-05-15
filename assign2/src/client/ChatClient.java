@@ -27,9 +27,9 @@ public class ChatClient {
             String input;
             while ((input = userInput.readLine()) != null) {
                 out.println(input);
-                if (input.equalsIgnoreCase("/quit")) {
+                /*if (input.equalsIgnoreCase("/quit")) {
                     break;
-                }
+                }*/
             }
         }
     }

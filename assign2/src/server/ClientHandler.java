@@ -20,19 +20,43 @@ public class ClientHandler implements Runnable {
         ) {
             this.out = new PrintWriter(socket.getOutputStream(), true);
 
-            out.println("Welcome! Please enter your username:");
+            out.println("Welcome! Do you want to (1) Register or (2) Login?");
+            String choice = in.readLine();
+
+            if ("1".equals(choice)) {
+                out.println("Enter desired username:");
+                String regUsername = in.readLine();
+                out.println("Enter desired password:");
+                String regPassword = in.readLine();
+
+                if (regUsername == null || regPassword == null) {
+                    out.println("[Server] Invalid input. Closing connection.");
+                    socket.close();
+                    return;
+                }
+
+                if (AuthService.registerUser(regUsername, regPassword)) {
+                    out.println("[Server] Registration successful! Please login now.");
+                } else {
+                    out.println("[Server] Username already taken. Connection closing.");
+                    socket.close();
+                    return;
+                }
+            }
+
+            // Login flow
+            out.println("Enter username:");
             username = in.readLine();
             out.println("Enter password:");
             String password = in.readLine();
 
-            if (!AuthService.authenticate(username, password)) {
+            if (username == null || password == null || !AuthService.authenticate(username, password)) {
                 out.println("[Server] Login failed. Connection closing.");
                 socket.close();
                 return;
             }
 
             out.println("[Server] Login successful!");
-
             showHelp();
 
             String message;
@@ -64,7 +88,7 @@ public class ClientHandler implements Runnable {
                 currentRoom.leave(this);
             }
             try {
-                socket.close(); // garante que o socket fecha
+                socket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
