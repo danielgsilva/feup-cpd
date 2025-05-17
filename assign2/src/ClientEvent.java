@@ -1,0 +1,16 @@
+/**
+ * Client events.
+ */
+public enum ClientEvent {
+    REGISTER_SUCCESS,
+    REGISTER_FAILURE,
+    LOGIN_SUCCESS,
+    LOGIN_FAILURE,
+    LOGOUT_SUCCESS,
+    ROOM_LIST,
+    ROOM_CREATED,
+    ROOM_EXISTS,
+    ROOM_JOINED,
+    ROOM_LEFT,
+    MESSAGE_RECEIVED
+}
