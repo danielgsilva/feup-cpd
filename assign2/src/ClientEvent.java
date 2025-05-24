@@ -1,3 +1,4 @@
+
 /**
  * Client events.
  */
@@ -12,5 +13,9 @@ public enum ClientEvent {
     ROOM_EXISTS,
     ROOM_JOINED,
     ROOM_LEFT,
-    MESSAGE_RECEIVED
+    MESSAGE_RECEIVED,
+    CONNECTION_LOST,
+    CONNECTION_RESTORED,
+    RECONNECTION_SUCCESS,
+    RECONNECTION_FAILED
 }

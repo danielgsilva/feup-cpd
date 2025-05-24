@@ -2,10 +2,13 @@
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Main server class for the chat application. Listens for client connections
- * and spawns virtual threads to handle them.
+ * and spawns virtual threads to handle them. Includes fault tolerance features.
  */
 public class ChatServer {
 
@@ -13,6 +16,9 @@ public class ChatServer {
     private final int port;
     private final AuthenticationService authService;
     private final RoomManager roomManager;
+    private final TokenService tokenService;
+    private final SessionManager sessionManager;
+    private final ScheduledExecutorService scheduler;
 
     /**
      * Create a new chat server listening on the specified port.
@@ -23,6 +29,9 @@ public class ChatServer {
         this.port = port;
         this.authService = new AuthenticationService();
         this.roomManager = new RoomManager();
+        this.tokenService = new TokenService();
+        this.sessionManager = new SessionManager();
+        this.scheduler = Executors.newScheduledThreadPool(1);
         this.running = false;
 
         // Create default rooms
@@ -31,6 +40,9 @@ public class ChatServer {
         this.roomManager.createRoom("ia");
         this.roomManager.createRoom("cg");
         this.roomManager.createRoom("compiladores");
+
+        // Schedule token cleanup every hour
+        this.scheduler.scheduleAtFixedRate(this.tokenService::cleanupExpiredTokens, 1, 1, TimeUnit.HOURS);
     }
 
     /**
@@ -58,6 +70,8 @@ public class ChatServer {
             }
         } catch (IOException e) {
             System.err.println("Could not start server: " + e.getMessage());
+        } finally {
+            scheduler.shutdown();
         }
     }
 
@@ -68,7 +82,7 @@ public class ChatServer {
      */
     private void handleClient(Socket clientSocket) {
         try {
-            ClientHandler handler = new ClientHandler(clientSocket, authService, roomManager);
+            ClientHandler handler = new ClientHandler(clientSocket, authService, roomManager, tokenService, sessionManager);
             handler.handle();
         } catch (Exception e) {
             System.err.println("Error handling client: " + e.getMessage());
@@ -85,6 +99,7 @@ public class ChatServer {
      */
     public void stop() {
         running = false;
+        scheduler.shutdownNow();
     }
 
     /**
@@ -106,6 +121,13 @@ public class ChatServer {
         }
 
         ChatServer server = new ChatServer(port);
+
+        // Add shutdown hook for graceful shutdown
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutting down server...");
+            server.stop();
+        }));
+
         server.start();
     }
 }

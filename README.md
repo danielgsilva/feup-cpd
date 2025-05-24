@@ -29,7 +29,10 @@ Group members:
     - SERVER: `REGISTER_SUCCESS` or `REGISTER_FAILURE`
     <br><br>  
     - CLIENT: `LOGIN <username> <password>`
-    - SERVER: `LOGIN_SUCCESS` or `LOGIN_FAILURE`
+    - SERVER: `LOGIN_SUCCESS <token>` or `LOGIN_FAILURE`
+    <br><br>  
+    - CLIENT: `RECONNECT <token>`
+    - SERVER: `RECONNECT_SUCCESS` or `RECONNECT_FAILURE`
     <br><br>  
     - CLIENT: `LOGOUT`
     - SERVER: `LOGOUT_SUCCESS`

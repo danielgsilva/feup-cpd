@@ -11,7 +11,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Client for the chat application. Handles connection to the server and
- * provides methods for authentication and messaging.
+ * provides methods for authentication and messaging. Supports automatic
+ * reconnection with token-based authentication.
  */
 public class ChatClient {
 
@@ -30,6 +31,11 @@ public class ChatClient {
 
     private final List<ChatClientListener> listeners;
 
+    private String authToken;
+    private static final int MAX_RECONNECT_ATTEMPTS = 5;
+    private static final int RECONNECT_DELAY_MS = 3000;
+    private boolean autoReconnect = true;
+
     /**
      * Create a new chat client.
      *
@@ -42,6 +48,7 @@ public class ChatClient {
         this.connected = false;
         this.authenticated = false;
         this.currentRoom = null;
+        this.authToken = null;
         this.lock = new ReentrantLock();
         this.listeners = new ArrayList<>();
     }
@@ -62,6 +69,12 @@ public class ChatClient {
             listenerThread = Thread.startVirtualThread(listener);
 
             connected = true;
+
+            // If we have an auth token, try to reconnect
+            if (authToken != null) {
+                attemptReconnection();
+            }
+
             return true;
         } catch (IOException e) {
             System.err.println("Error connecting to server: " + e.getMessage());
@@ -73,6 +86,8 @@ public class ChatClient {
      * Disconnect from the server.
      */
     public void disconnect() {
+        autoReconnect = false;
+
         if (connected) {
             try {
                 // Stop the listener
@@ -94,9 +109,173 @@ public class ChatClient {
                 System.err.println("Error disconnecting: " + e.getMessage());
             } finally {
                 connected = false;
-                authenticated = false;
-                currentRoom = null;
+                // Don't reset authentication state for fault tolerance
             }
+        }
+    }
+
+    /**
+     * Handle connection loss and attempt reconnection.
+     */
+    void handleConnectionLoss() {
+        if (!autoReconnect) {
+            return;
+        }
+
+        System.out.println("Server connection lost. Attempting to reconnect...");
+        connected = false;
+
+        // Notify listeners about connection loss
+        notifyListeners(ClientEvent.CONNECTION_LOST, null);
+
+        // Attempt reconnection
+        Thread.startVirtualThread(this::performReconnection);
+    }
+
+    /**
+     * Perform reconnection attempts with exponential backoff.
+     */
+    private void performReconnection() {
+        int attempts = 0;
+        int delay = RECONNECT_DELAY_MS;
+
+        while (attempts < MAX_RECONNECT_ATTEMPTS && autoReconnect && !connected) {
+            attempts++;
+
+            System.out.println("Reconnection attempt " + attempts + "/" + MAX_RECONNECT_ATTEMPTS);
+
+            try {
+                // Wait before attempting reconnection
+                Thread.sleep(delay);
+
+                // Try to reconnect
+                if (reconnectToServer()) {
+                    //System.out.println("Reconnection successful!");
+                    notifyListeners(ClientEvent.CONNECTION_RESTORED, null);
+                    return;
+                }
+
+                // Exponential backoff with jitter
+                delay = Math.min(delay * 2, 30000); // Cap at 30 seconds
+                delay += (int) (Math.random() * 1000); // Add jitter
+
+            } catch (InterruptedException e) {
+                System.err.println("Reconnection interrupted");
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+
+        // All reconnection attempts failed
+        System.err.println("Failed to reconnect after " + MAX_RECONNECT_ATTEMPTS + " attempts");
+        notifyListeners(ClientEvent.RECONNECTION_FAILED, null);
+    }
+
+    /**
+     * Attempt to reconnect to the server and restore session.
+     *
+     * @return true if reconnection successful, false otherwise
+     */
+    private boolean reconnectToServer() {
+        try {
+            // Close existing resources
+            closeResources();
+
+            // Create new connection
+            socket = new Socket(host, port);
+            out = new PrintWriter(socket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            // Start new message listener
+            listener = new MessageListener(this, in);
+            listenerThread = Thread.startVirtualThread(listener);
+
+            connected = true;
+
+            // If we have an auth token, try to restore session
+            if (authToken != null) {
+                return attemptReconnection();
+            }
+
+            return true;
+
+        } catch (IOException e) {
+            System.err.println("Error during reconnection: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Attempt to restore session using authentication token.
+     *
+     * @return true if session restored successfully, false otherwise
+     */
+    private boolean attemptReconnection() {
+        if (authToken == null) {
+            return false;
+        }
+
+        // Send reconnection request with token
+        out.println("RECONNECT " + authToken);
+
+        // Wait for response (with timeout)
+        long startTime = System.currentTimeMillis();
+        long timeout = 5000; // 5 seconds timeout
+
+        while (System.currentTimeMillis() - startTime < timeout) {
+            try {
+                Thread.sleep(100); // Small delay to avoid busy waiting
+
+                // Check if we received a response
+                // The response will be handled by handleServerMessage()
+                // and will update our authentication state
+                lock.lock();
+                try {
+                    if (authenticated) {
+                        return true;
+                    }
+                } finally {
+                    lock.unlock();
+                }
+
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+
+        System.err.println("Failed to restore session");
+        authToken = null;
+        return false;
+    }
+
+    /**
+     * Close existing connection resources.
+     */
+    private void closeResources() {
+        try {
+            if (listener != null) {
+                listener.stop();
+            }
+
+            if (listenerThread != null && listenerThread.isAlive()) {
+                listenerThread.interrupt();
+            }
+
+            if (out != null) {
+                out.close();
+            }
+
+            if (in != null) {
+                in.close();
+            }
+
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error closing resources during reconnection: " + e.getMessage());
         }
     }
 
@@ -111,10 +290,8 @@ public class ChatClient {
         if (!connected) {
             return false;
         }
-
         out.println("REGISTER " + username + " " + password);
 
-        // Response will be handled by the message listener
         return true;
     }
 
@@ -133,7 +310,6 @@ public class ChatClient {
         this.username = username;
         out.println("LOGIN " + username + " " + password);
 
-        // Response will be handled by the message listener
         return true;
     }
 
@@ -143,8 +319,6 @@ public class ChatClient {
     public void logout() {
         if (connected && authenticated) {
             out.println("LOGOUT");
-
-            // Response will be handled by the message listener
         }
     }
 
@@ -154,8 +328,6 @@ public class ChatClient {
     public void requestRoomList() {
         if (connected && authenticated) {
             out.println("LIST_ROOMS");
-
-            // Response will be handled by the message listener
         }
     }
 
@@ -167,8 +339,6 @@ public class ChatClient {
     public void createRoom(String roomName) {
         if (connected && authenticated) {
             out.println("CREATE_ROOM " + roomName);
-
-            // Response will be handled by the message listener
         }
     }
 
@@ -180,8 +350,6 @@ public class ChatClient {
     public void joinRoom(String roomName) {
         if (connected && authenticated) {
             out.println("JOIN_ROOM " + roomName);
-
-            // Response will be handled by the message listener
         }
     }
 
@@ -191,8 +359,6 @@ public class ChatClient {
     public void leaveRoom() {
         if (connected && authenticated && currentRoom != null) {
             out.println("LEAVE_ROOM");
-
-            // Response will be handled by the message listener
         }
     }
 
@@ -236,14 +402,40 @@ public class ChatClient {
                 lock.lock();
                 try {
                     authenticated = true;
+                    // Extract token 
+                    if (parts.length > 1) {
+                        authToken = parts[1];
+                    }
                 } finally {
                     lock.unlock();
                 }
                 notifyListeners(ClientEvent.LOGIN_SUCCESS, null);
+
                 break;
 
             case "LOGIN_FAILURE":
                 notifyListeners(ClientEvent.LOGIN_FAILURE, null);
+                break;
+
+            case "RECONNECT_SUCCESS":
+                lock.lock();
+                try {
+                    authenticated = true;
+                } finally {
+                    lock.unlock();
+                }
+                notifyListeners(ClientEvent.RECONNECTION_SUCCESS, null);
+                break;
+
+            case "RECONNECT_FAILURE":
+                lock.lock();
+                try {
+                    authenticated = false;
+                    authToken = null;
+                } finally {
+                    lock.unlock();
+                }
+                notifyListeners(ClientEvent.RECONNECTION_FAILED, null);
                 break;
 
             case "LOGOUT_SUCCESS":
@@ -251,6 +443,7 @@ public class ChatClient {
                 try {
                     authenticated = false;
                     currentRoom = null;
+                    authToken = null;
                 } finally {
                     lock.unlock();
                 }
