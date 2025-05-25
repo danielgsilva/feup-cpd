@@ -293,20 +293,6 @@ public class ClientConsoleUI implements ChatClientListener {
         String roomName = scanner.nextLine();
 
         client.createAiRoom(roomName, DEFAULT_AI_PROMPT);
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-        }
-
-        System.out.println("Joining AI room automatically...");
-        joinRoomLatch = new CountDownLatch(1);
-        client.joinRoom(roomName);
-        try {
-            joinRoomLatch.await(3, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            System.err.println("Interrupted while waiting to join AI room.");
-        }
     }
 
     /**
