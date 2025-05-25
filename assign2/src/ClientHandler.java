@@ -139,11 +139,13 @@ public class ClientHandler {
                     String user = parts[1];
                     String pass = parts[2];
                     if (authService.authenticateUser(user, pass)) {
+                        if (!authService.tryLogin(user)) {
+                            out.println("LOGIN_FAILURE User already logged in.");
+                            return;
+                        }
                         this.username = user;
                         this.authenticated = true;
-                        this.authToken = tokenService.generateToken(user);
-                        sessionManager.createOrUpdateSession(user, null, this);
-                        out.println("LOGIN_SUCCESS " + authToken);
+                        out.println("LOGIN_SUCCESS");
                     } else {
                         out.println("LOGIN_FAILURE");
                     }
@@ -278,6 +280,9 @@ public class ClientHandler {
                     tokenService.invalidateToken(authToken);
                 }
                 sessionManager.removeSession(username);
+                if (this.authenticated && this.username != null) {
+                    authService.logout(this.username);
+                }                
                 this.authenticated = false;
                 this.username = null;
                 this.currentRoom = null;
@@ -328,6 +333,9 @@ public class ClientHandler {
      * Clean up resources when the connection is closed.
      */
     private void cleanup() {
+        if (this.authenticated && this.username != null) {
+            authService.logout(this.username);
+        }        
         this.running = false;
 
         // Note: We don't remove the user from rooms or invalidate tokens here

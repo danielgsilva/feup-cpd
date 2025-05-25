@@ -4,6 +4,7 @@ import java.nio.file.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -16,6 +17,19 @@ public class AuthenticationService {
     private static final String USERS_FILE = "users.txt";
     private final Map<String, String> users; 
     private final ReentrantReadWriteLock lock;
+    private static final HashSet<String> loggedInUsers = new HashSet<>();
+
+    public boolean tryLogin(String username) {
+        if (loggedInUsers.contains(username)) {
+            return false;
+        }
+        loggedInUsers.add(username);
+        return true;
+    }
+    
+    public void logout(String username) {
+        loggedInUsers.remove(username);
+    }    
 
     /**
      * Create a new authentication service. Loads users from file if available.
