@@ -5,8 +5,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -18,16 +16,6 @@ public class AuthenticationService {
     private static final String USERS_FILE = "users.txt";
     private final Map<String, String> users; 
     private final ReentrantReadWriteLock lock;
-    private final Set<String> loggedInUsers = ConcurrentHashMap.newKeySet();
-
-    public boolean isUserLoggedIn(String username) {
-        return loggedInUsers.contains(username);
-    }
-
-    public void setUserLoggedIn(String username, boolean loggedIn) {
-        if (loggedIn) loggedInUsers.add(username);
-        else loggedInUsers.remove(username);
-    }
 
     /**
      * Create a new authentication service. Loads users from file if available.

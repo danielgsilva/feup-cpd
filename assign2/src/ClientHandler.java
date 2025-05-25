@@ -90,9 +90,6 @@ public class ClientHandler {
                 processInput(input);
             }
         } finally {
-            if (this.authenticated && this.username != null) {
-                authService.setUserLoggedIn(this.username, false);
-            }            
             cleanup();
         }
     }
@@ -142,16 +139,11 @@ public class ClientHandler {
                     String user = parts[1];
                     String pass = parts[2];
                     if (authService.authenticateUser(user, pass)) {
-                        synchronized (authService) {
-                            if (authService.isUserLoggedIn(user)) {
-                                out.println("LOGIN_FAILURE User already logged in.");
-                                return;
-                            }
-                            authService.setUserLoggedIn(user, true);
-                        }
                         this.username = user;
                         this.authenticated = true;
-                        out.println("LOGIN_SUCCESS");
+                        this.authToken = tokenService.generateToken(user);
+                        sessionManager.createOrUpdateSession(user, null, this);
+                        out.println("LOGIN_SUCCESS " + authToken);
                     } else {
                         out.println("LOGIN_FAILURE");
                     }
@@ -278,9 +270,6 @@ public class ClientHandler {
                 break;
 
             case "LOGOUT":
-                if (this.authenticated && this.username != null) {
-                    authService.setUserLoggedIn(this.username, false);
-                }            
                 if (this.currentRoom != null) {
                     roomManager.removeUserFromRoom(this.currentRoom, this);
                 }
@@ -339,9 +328,6 @@ public class ClientHandler {
      * Clean up resources when the connection is closed.
      */
     private void cleanup() {
-        if (this.authenticated && this.username != null) {
-            authService.setUserLoggedIn(this.username, false);
-        }        
         this.running = false;
 
         // Note: We don't remove the user from rooms or invalidate tokens here
