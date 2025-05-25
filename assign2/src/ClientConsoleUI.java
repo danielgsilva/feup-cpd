@@ -281,8 +281,16 @@ public class ClientConsoleUI implements ChatClientListener {
     private void createRoom() {
         System.out.print("Room name: ");
         String roomName = scanner.nextLine();
-
         client.createRoom(roomName);
+
+        System.out.println("Joining room automatically...");
+        joinRoomLatch = new CountDownLatch(1);
+        client.joinRoom(roomName);
+        try {
+            joinRoomLatch.await(3, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            System.err.println("Interrupted while waiting to join room.");
+        }
     }
 
     /**
@@ -291,8 +299,16 @@ public class ClientConsoleUI implements ChatClientListener {
     private void createAiRoom() {
         System.out.print("AI Room name: ");
         String roomName = scanner.nextLine();
-
         client.createAiRoom(roomName, DEFAULT_AI_PROMPT);
+
+        System.out.println("Joining AI room automatically...");
+        joinRoomLatch = new CountDownLatch(1);
+        client.joinRoom(roomName);
+        try {
+            joinRoomLatch.await(3, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            System.err.println("Interrupted while waiting to join AI room.");
+        }
     }
 
     /**
@@ -366,6 +382,10 @@ public class ClientConsoleUI implements ChatClientListener {
 
             case ROOM_EXISTS:
                 System.out.println("Room already exists: " + data);
+                break;
+
+            case ROOM_NOT_FOUND:
+                System.out.println("Room not found: " + data);
                 break;
 
             case ROOM_JOINED:

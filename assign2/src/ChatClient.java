@@ -484,6 +484,12 @@ public class ChatClient {
                 }
                 break;
 
+            case "ROOM_NOT_FOUND":
+                if (parts.length > 1) {
+                    notifyListeners(ClientEvent.ROOM_NOT_FOUND, parts[1]);
+                }
+                break;
+
             case "LEFT_ROOM":
                 if (parts.length > 1) {
                     lock.lock();
