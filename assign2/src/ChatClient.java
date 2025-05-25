@@ -388,7 +388,6 @@ public class ChatClient {
      * @param message The message
      */
     void handleServerMessage(String message) {
-        System.out.println("Received message from server: " + message);
 
         String[] parts = message.split(" ");
         String command = parts[0];
