@@ -17,7 +17,6 @@ public class ClientConsoleUI implements ChatClientListener {
     // These are used to wait for server responses
     // Since our solution is asynchronous, we can get a better user experience
     // by waiting for server responses before proceeding with the UI flow
-
     private CountDownLatch authLatch;
     private CountDownLatch roomListLatch;
     private CountDownLatch joinRoomLatch;
@@ -93,7 +92,6 @@ public class ClientConsoleUI implements ChatClientListener {
 
             case "3":
                 exitApplication();
-                running = false;
                 break;
 
             default:
@@ -127,7 +125,9 @@ public class ClientConsoleUI implements ChatClientListener {
                 client.requestRoomList();
 
                 try {
-                    if (!running) return;
+                    if (!running) {
+                        return;
+                    }
                     roomListLatch.await(3, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     System.err.println("Interrupted while waiting for room list.");
@@ -148,7 +148,9 @@ public class ClientConsoleUI implements ChatClientListener {
                 joinRoom();
 
                 try {
-                    if (!running) return;
+                    if (!running) {
+                        return;
+                    }
                     joinRoomLatch.await(3, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     System.err.println("Interrupted while waiting for join room.");
@@ -159,7 +161,9 @@ public class ClientConsoleUI implements ChatClientListener {
                 authLatch = new CountDownLatch(1);
                 client.logout();
                 try {
-                    if (!running) return;
+                    if (!running) {
+                        return;
+                    }
                     if (!authLatch.await(3, TimeUnit.SECONDS)) {
                         System.out.println("Server response timeout. Please try again.");
                     }
@@ -170,7 +174,6 @@ public class ClientConsoleUI implements ChatClientListener {
 
             case "6":
                 exitApplication();
-                running = false;
                 break;
 
             default:
@@ -200,7 +203,9 @@ public class ClientConsoleUI implements ChatClientListener {
             leaveRoomLatch = new CountDownLatch(1);
             client.leaveRoom();
             try {
-                if (!running) return;
+                if (!running) {
+                    return;
+                }
                 leaveRoomLatch.await(3, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 System.err.println("Interrupted while waiting to leave room.");
@@ -208,7 +213,6 @@ public class ClientConsoleUI implements ChatClientListener {
             return;
         } else if (input.equals("/quit")) {
             exitApplication();
-            running = false;
         } else if (!input.trim().isEmpty()) {
             client.sendMessage(input);
             showChatInterface();
@@ -217,7 +221,7 @@ public class ClientConsoleUI implements ChatClientListener {
         }
     }
 
-        /**
+    /**
      * Pad a string to the right with spaces
      */
     private String padRight(String s, int n) {
@@ -278,20 +282,7 @@ public class ClientConsoleUI implements ChatClientListener {
         System.out.print("Room name: ");
         String roomName = scanner.nextLine();
 
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-        }
-
-        System.out.println("Joining room automatically...");
-        joinRoomLatch = new CountDownLatch(1);
-        client.joinRoom(roomName);
-        try {
-            joinRoomLatch.await(3, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            System.err.println("Interrupted while waiting to join room.");
-        }
-        //client.createRoom(roomName);
+        client.createRoom(roomName);
     }
 
     /**
@@ -447,15 +438,23 @@ public class ClientConsoleUI implements ChatClientListener {
         ui.start();
     }
 
-        /**
+    /**
      * Exit the application immediately.
      */
     private void exitApplication() {
         running = false;
-        if (authLatch != null) authLatch.countDown();
-        if (joinRoomLatch != null) joinRoomLatch.countDown();
-        if (roomListLatch != null) roomListLatch.countDown();
-        if (leaveRoomLatch != null) leaveRoomLatch.countDown();
-        System.exit(0);
+        if (authLatch != null) {
+            authLatch.countDown();
+        }
+        if (joinRoomLatch != null) {
+            joinRoomLatch.countDown();
+        }
+        if (roomListLatch != null) {
+            roomListLatch.countDown();
+        }
+        if (leaveRoomLatch != null) {
+            leaveRoomLatch.countDown();
+        }
+        //System.exit(0);
     }
 }
