@@ -30,7 +30,7 @@ public class AiRoom extends Room {
     public AiRoom(String name, String prompt) {
         super(name);
         this.prompt = prompt;
-        this.model = "llama3";
+        this.model = "tinyllama";
         this.httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_1_1)
                 .connectTimeout(Duration.ofSeconds(60))
