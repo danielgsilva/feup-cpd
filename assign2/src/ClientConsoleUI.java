@@ -11,6 +11,7 @@ public class ClientConsoleUI implements ChatClientListener {
     private final ChatClient client;
     private final Scanner scanner;
     private boolean running;
+    private boolean headerShown = false;
 
     // Latches for synchronization
     // These are used to wait for server responses
@@ -55,8 +56,10 @@ public class ClientConsoleUI implements ChatClientListener {
         while (running) {
             if (!client.isAuthenticated()) {
                 showAuthMenu();
+                headerShown = false; // Reset header flag when leaving chat
             } else if (client.getCurrentRoom() == null) {
                 showRoomMenu();
+                headerShown = false; // Reset header flag when leaving chat
             } else {
                 showChatInterface();
             }
@@ -71,10 +74,13 @@ public class ClientConsoleUI implements ChatClientListener {
      * Show the authentication menu.
      */
     private void showAuthMenu() {
-        System.out.println("\nAuthentication Menu");
-        System.out.println("1. Login");
-        System.out.println("2. Register");
-        System.out.println("3. Exit");
+        System.out.println("\n╔══════════════════════════╗");
+        System.out.println("║     Authentication       ║");
+        System.out.println("╠══════════════════════════╣");
+        System.out.println("║ 1. Login                 ║");
+        System.out.println("║ 2. Register              ║");
+        System.out.println("║ 3. Exit                  ║");
+        System.out.println("╚══════════════════════════╝");
         System.out.print("Choose an option: ");
 
         String choice = scanner.nextLine();
@@ -89,6 +95,7 @@ public class ClientConsoleUI implements ChatClientListener {
                 break;
 
             case "3":
+                exitApplication();
                 running = false;
                 break;
 
@@ -102,13 +109,16 @@ public class ClientConsoleUI implements ChatClientListener {
      * Show the room menu.
      */
     private void showRoomMenu() {
-        System.out.println("\nRoom Menu");
-        System.out.println("1. List rooms");
-        System.out.println("2. Create room");
-        System.out.println("3. Create AI room");
-        System.out.println("4. Join room");
-        System.out.println("5. Logout");
-        System.out.println("6. Exit");
+        System.out.println("\n╔══════════════════════════╗");
+        System.out.println("║         Room Menu        ║");
+        System.out.println("╠══════════════════════════╣");
+        System.out.println("║ 1. List rooms            ║");
+        System.out.println("║ 2. Create room           ║");
+        System.out.println("║ 3. Create AI room        ║");
+        System.out.println("║ 4. Join room             ║");
+        System.out.println("║ 5. Logout                ║");
+        System.out.println("║ 6. Exit                  ║");
+        System.out.println("╚══════════════════════════╝");
         System.out.println("Choose an option: ");
 
         String choice = scanner.nextLine();
@@ -120,6 +130,7 @@ public class ClientConsoleUI implements ChatClientListener {
                 client.requestRoomList();
 
                 try {
+                    if (!running) return;
                     roomListLatch.await(3, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     System.err.println("Interrupted while waiting for room list.");
@@ -140,6 +151,7 @@ public class ClientConsoleUI implements ChatClientListener {
                 joinRoom();
 
                 try {
+                    if (!running) return;
                     joinRoomLatch.await(3, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     System.err.println("Interrupted while waiting for join room.");
@@ -151,6 +163,7 @@ public class ClientConsoleUI implements ChatClientListener {
                 client.logout();
                 try {
                     // Wait up to 3 seconds for registration response
+                    if (!running) return;
                     if (!authLatch.await(3, TimeUnit.SECONDS)) {
                         System.out.println("Server response timeout. Please try again.");
                     }
@@ -160,6 +173,7 @@ public class ClientConsoleUI implements ChatClientListener {
                 break;
 
             case "6":
+                exitApplication();
                 running = false;
                 break;
 
@@ -173,17 +187,52 @@ public class ClientConsoleUI implements ChatClientListener {
      * Show the chat interface.
      */
     private void showChatInterface() {
-        System.out.println("\nRoom: " + client.getCurrentRoom());
-        System.out.println("Enter message (or /leave to leave room, /quit to exit): ");
+        // Show header only once when entering the room
+        if (!headerShown) {
+            System.out.println("\n╔═══════════════════════════════════════════════════════════════════════════╗");
+            System.out.println("║ Room: " + padRight(client.getCurrentRoom(), 67) + " ║");
+            System.out.println("╠═══════════════════════════════════════════════════════════════════════════╣");
+            System.out.println("║ Type your message and press Enter                                         ║");
+            System.out.println("║ Commands: /leave (leave room), /quit (exit application)                   ║");
+            System.out.println("╚═══════════════════════════════════════════════════════════════════════════╝");
+            headerShown = true;
+        }
+
+        System.out.print("> ");
         String input = scanner.nextLine();
 
         if (input.equals("/leave")) {
+            leaveRoomLatch = new CountDownLatch(1);
             client.leaveRoom();
+            try {
+                if (!running) return;
+                leaveRoomLatch.await(3, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                System.err.println("Interrupted while waiting to leave room.");
+            }
+            // Don't call showChatInterface() again - let the main loop handle it
+            // This will make it return to the room menu
+            return;
         } else if (input.equals("/quit")) {
+            exitApplication();
             running = false;
-        } else {
+        } else if (!input.trim().isEmpty()) {
             client.sendMessage(input);
+            showChatInterface();
+        } else {
+            // Empty message, stay in chat interface
+            showChatInterface();
         }
+    }
+
+        /**
+     * Pad a string to the right with spaces
+     */
+    private String padRight(String s, int n) {
+        if (s == null) {
+            return String.format("%-" + n + "s", "");
+        }
+        return String.format("%-" + n + "s", s);
     }
 
     /**
@@ -241,7 +290,23 @@ public class ClientConsoleUI implements ChatClientListener {
         System.out.print("Room name: ");
         String roomName = scanner.nextLine();
 
-        client.createRoom(roomName);
+        // Wait a moment for room creation
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            // Ignore
+        }
+
+        // Automatically join the room
+        System.out.println("Joining room automatically...");
+        joinRoomLatch = new CountDownLatch(1);
+        client.joinRoom(roomName);
+        try {
+            joinRoomLatch.await(3, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            System.err.println("Interrupted while waiting to join room.");
+        }
+        //client.createRoom(roomName);
     }
 
     /**
@@ -327,11 +392,14 @@ public class ClientConsoleUI implements ChatClientListener {
                         System.out.println("No rooms available.");
                     } else {
                         for (String room : rooms) {
-                            System.out.println("- " + room);
+                            System.out.println("• " + room);
                         }
                     }
                 }
-                roomListLatch.countDown();
+                if (roomListLatch != null) {
+                    roomListLatch.countDown();
+                }
+                //roomListLatch.countDown();
                 break;
 
             case ROOM_CREATED:
@@ -344,11 +412,17 @@ public class ClientConsoleUI implements ChatClientListener {
 
             case ROOM_JOINED:
                 System.out.println("Joined room: " + data);
-                joinRoomLatch.countDown();
+                if (joinRoomLatch != null) {
+                    joinRoomLatch.countDown();
+                }
+                //joinRoomLatch.countDown();
                 break;
 
             case ROOM_LEFT:
                 System.out.println("Left room: " + data);
+                if (leaveRoomLatch != null) {
+                    leaveRoomLatch.countDown();
+                }
                 break;
 
             case MESSAGE_RECEIVED:
@@ -358,6 +432,7 @@ public class ClientConsoleUI implements ChatClientListener {
 
                     if (roomName.equals(client.getCurrentRoom())) {
                         System.out.println(messageContent);
+                        System.out.print("> "); // Show prompt again
                     }
                 }
                 break;
@@ -389,5 +464,17 @@ public class ClientConsoleUI implements ChatClientListener {
 
         ClientConsoleUI ui = new ClientConsoleUI(host, port);
         ui.start();
+    }
+
+        /**
+     * Exit the application immediately.
+     */
+    private void exitApplication() {
+        running = false;
+        if (authLatch != null) authLatch.countDown();
+        if (joinRoomLatch != null) joinRoomLatch.countDown();
+        if (roomListLatch != null) roomListLatch.countDown();
+        if (leaveRoomLatch != null) leaveRoomLatch.countDown();
+        System.exit(0);
     }
 }
