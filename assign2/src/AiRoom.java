@@ -81,10 +81,11 @@ public class AiRoom extends Room {
             return;
         }
 
-        Message thinkingMessage = new Message("SYSTEM", "Bot is thinking...");
-        super.addMessage(thinkingMessage);
+        
 
         Thread.startVirtualThread(() -> {
+            Message thinkingMessage = new Message("SYSTEM", "Bot is thinking...");
+            super.addMessage(thinkingMessage);
             try {
                 String userMessage = message.getContent();
 
