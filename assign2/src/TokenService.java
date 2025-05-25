@@ -18,7 +18,7 @@ public class TokenService {
     private final Map<String, TokenInfo> tokens; 
     private final Map<String, String> userTokens; 
     private final ReentrantReadWriteLock lock;
-    private final SecureRandom random; // Secure random number generator for token generation
+    private final SecureRandom random;
     
     /**
      * Create a new token service.
@@ -39,18 +39,15 @@ public class TokenService {
     public String generateToken(String username) {
         lock.writeLock().lock();
         try {
-            // Invalidate any existing token for this user
             String existingToken = userTokens.get(username);
             if (existingToken != null) {
                 tokens.remove(existingToken);
             }
             
-            // Generate new token
             byte[] tokenBytes = new byte[TOKEN_LENGTH];
             random.nextBytes(tokenBytes);
-            String token = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes); // Generate a URL-safe token
+            String token = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
             
-            // Store token info
             LocalDateTime expiry = LocalDateTime.now().plus(TOKEN_EXPIRY_HOURS, ChronoUnit.HOURS);
             TokenInfo tokenInfo = new TokenInfo(username, expiry);
             
@@ -81,9 +78,7 @@ public class TokenService {
                 return null;
             }
             
-            // Check if token has expired
             if (LocalDateTime.now().isAfter(tokenInfo.getExpiryTime())) {
-                // Token expired, remove it
                 lock.readLock().unlock();
                 lock.writeLock().lock();
                 try {
@@ -116,7 +111,6 @@ public class TokenService {
                 return false;
             }
             
-            // Update expiry time
             LocalDateTime newExpiry = LocalDateTime.now().plus(TOKEN_EXPIRY_HOURS, ChronoUnit.HOURS);
             TokenInfo newTokenInfo = new TokenInfo(tokenInfo.getUsername(), newExpiry);
             tokens.put(token, newTokenInfo);

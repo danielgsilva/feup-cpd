@@ -36,11 +36,9 @@ public class AiRoom extends Room {
                 .connectTimeout(Duration.ofSeconds(60))
                 .build();
 
-        // Add welcome messages
         super.addMessage(new Message("SYSTEM", "AI room created with prompt: " + prompt));
         super.addMessage(new Message("SYSTEM", "Bot is ready to respond to your messages."));
 
-        // Test Ollama connection
         testOllamaConnection();
     }
 
@@ -77,50 +75,37 @@ public class AiRoom extends Room {
      */
     @Override
     public void addMessage(Message message) {
-        // First add the user's message to the room
         super.addMessage(message);
 
-        // Don't respond to system messages or messages from the Bot itself
         if (message.getSender().equals("SYSTEM") || message.getSender().equals("Bot")) {
             return;
         }
 
-        // Add a "thinking" message immediately
         Message thinkingMessage = new Message("SYSTEM", "Bot is thinking...");
         super.addMessage(thinkingMessage);
 
-        // Run AI query in a separate thread to avoid blocking
         Thread.startVirtualThread(() -> {
             try {
-                // Get user message
                 String userMessage = message.getContent();
 
-                // Query Ollama for a response
                 String response = null;
                 try {
                     response = queryOllama(userMessage);
                 } catch (Exception e) {
-                    // If Ollama fails, use a fallback response
                     response = "I'm sorry, I couldn't process your request right now. The AI service might be temporarily unavailable.";
                 }
 
-                // Remove the "thinking" message
                 removeMessage(thinkingMessage);
 
                 if (response != null && !response.trim().isEmpty()) {
-                    // Create a new message from the Bot with the AI's response
                     Message botMessage = new Message("Bot", response.trim());
                     super.addMessage(botMessage);
                 } else {
-                    // Add an error message
                     String errorMsg = "Sorry, I couldn't generate a response right now.";
                     super.addMessage(new Message("Bot", errorMsg));
                 }
             } catch (Exception e) {
-                // Remove the "thinking" message
                 removeMessage(thinkingMessage);
-
-                // Add an error message to the room
                 super.addMessage(new Message("Bot", "Sorry, I encountered an error: " + e.getMessage()));
             }
         });
@@ -130,14 +115,12 @@ public class AiRoom extends Room {
      * Query Ollama with the user message
      */
     private String queryOllama(String userMessage) throws IOException, InterruptedException {
-        // Create a simple JSON request
         String jsonBody = String.format(
                 "{\"model\":\"%s\",\"prompt\":\"%s\",\"stream\":false}",
                 model,
                 escapeJson("User: " + userMessage + "\nAssistant:")
         );
 
-        // Create the HTTP request with increased timeout
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:11434/api/generate"))
                 .header("Content-Type", "application/json")
@@ -145,7 +128,6 @@ public class AiRoom extends Room {
                 .timeout(Duration.ofMinutes(5))
                 .build();
 
-        // Send the request and get the response
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 200) {
@@ -154,7 +136,6 @@ public class AiRoom extends Room {
 
         String responseBody = response.body();
 
-        // Extract the response text
         if (responseBody.contains("\"response\":\"")) {
             int start = responseBody.indexOf("\"response\":\"") + "\"response\":\"".length();
             int end = responseBody.indexOf("\"", start);
@@ -164,7 +145,6 @@ public class AiRoom extends Room {
             }
         }
 
-        // Fallback - return a generic response if we can't parse it
         return "I received your message but couldn't generate a proper response.";
     }
 

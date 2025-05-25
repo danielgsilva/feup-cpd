@@ -77,7 +77,6 @@ public class ChatClient {
 
             connected = true;
 
-            // If we have an auth token, try to reconnect
             if (authToken != null) {
                 attemptReconnection();
             }
@@ -102,7 +101,6 @@ public class ChatClient {
                     listener.stop();
                 }
 
-                // Close streams and socket
                 if (out != null) {
                     out.close();
                 }
@@ -116,7 +114,6 @@ public class ChatClient {
                 System.err.println("Error disconnecting: " + e.getMessage());
             } finally {
                 connected = false;
-                // Don't reset authentication state for fault tolerance
             }
         }
     }
@@ -132,10 +129,8 @@ public class ChatClient {
         System.out.println("Server connection lost. Attempting to reconnect...");
         connected = false;
 
-        // Notify listeners about connection loss
         notifyListeners(ClientEvent.CONNECTION_LOST, null);
 
-        // Attempt reconnection
         Thread.startVirtualThread(this::performReconnection);
     }
 
@@ -152,19 +147,16 @@ public class ChatClient {
             System.out.println("Reconnection attempt " + attempts + "/" + MAX_RECONNECT_ATTEMPTS);
 
             try {
-                // Wait before attempting reconnection
                 Thread.sleep(delay);
 
-                // Try to reconnect
                 if (reconnectToServer()) {
                     //System.out.println("Reconnection successful!");
                     notifyListeners(ClientEvent.CONNECTION_RESTORED, null);
                     return;
                 }
 
-                // Exponential backoff with jitter
-                delay = Math.min(delay * 2, 30000); // Cap at 30 seconds
-                delay += (int) (Math.random() * 1000); // Add jitter
+                delay = Math.min(delay * 2, 30000);
+                delay += (int) (Math.random() * 1000);
 
             } catch (InterruptedException e) {
                 System.err.println("Reconnection interrupted");
@@ -173,7 +165,6 @@ public class ChatClient {
             }
         }
 
-        // All reconnection attempts failed
         System.err.println("Failed to reconnect after " + MAX_RECONNECT_ATTEMPTS + " attempts");
         notifyListeners(ClientEvent.RECONNECTION_FAILED, null);
     }
@@ -185,7 +176,6 @@ public class ChatClient {
      */
     private boolean reconnectToServer() {
         try {
-            // Close existing resources
             closeResources();
 
             System.setProperty("javax.net.ssl.trustStore", "truststore.jks");
@@ -203,7 +193,6 @@ public class ChatClient {
 
             connected = true;
 
-            // If we have an auth token, try to restore session
             if (authToken != null) {
                 return attemptReconnection();
             }
@@ -226,20 +215,14 @@ public class ChatClient {
             return false;
         }
 
-        // Send reconnection request with token
         out.println("RECONNECT " + authToken);
 
-        // Wait for response (with timeout)
         long startTime = System.currentTimeMillis();
-        long timeout = 5000; // 5 seconds timeout
+        long timeout = 5000;
 
         while (System.currentTimeMillis() - startTime < timeout) {
             try {
-                Thread.sleep(100); // Small delay to avoid busy waiting
-
-                // Check if we received a response
-                // The response will be handled by handleServerMessage()
-                // and will update our authentication state
+                Thread.sleep(100);
                 lock.lock();
                 try {
                     if (authenticated) {
@@ -405,10 +388,8 @@ public class ChatClient {
      * @param message The message
      */
     void handleServerMessage(String message) {
-        // Print the message for debugging
         System.out.println("Received message from server: " + message);
 
-        // Parse the message
         String[] parts = message.split(" ");
         String command = parts[0];
 
@@ -425,7 +406,6 @@ public class ChatClient {
                 lock.lock();
                 try {
                     authenticated = true;
-                    // Extract token 
                     if (parts.length > 1) {
                         authToken = parts[1];
                     }
@@ -530,7 +510,6 @@ public class ChatClient {
                 break;
 
             default:
-                // Unknown command, ignore
                 break;
         }
     }

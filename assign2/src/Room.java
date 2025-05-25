@@ -49,7 +49,6 @@ public class Room {
             messagesLock.writeLock().unlock();
         }
 
-        // Broadcast message to all users in the room
         broadcastMessage(message);
     }
 
@@ -78,7 +77,6 @@ public class Room {
             if (!connectedUsers.contains(handler)) {
                 connectedUsers.add(handler);
 
-                // Add system message
                 Message enterMessage = new Message(
                         "SYSTEM",
                         "[" + handler.getUsername() + " enters the room]"

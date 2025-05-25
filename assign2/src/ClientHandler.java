@@ -221,15 +221,12 @@ public class ClientHandler {
                 if (parts.length >= 2) {
                     String roomName = parts[1];
 
-                    // Leave current room if any
                     if (this.currentRoom != null) {
                         roomManager.removeUserFromRoom(this.currentRoom, this);
                     }
 
-                    // Join new room
                     if (roomManager.addUserToRoom(roomName, this)) {
                         this.currentRoom = roomName;
-                        // Update session
                         sessionManager.createOrUpdateSession(username, currentRoom, this);
                         out.println("JOINED " + roomName);
                     } else {
@@ -246,7 +243,6 @@ public class ClientHandler {
                     String leftRoom = this.currentRoom;
                     this.currentRoom = null;
 
-                    // Update session
                     sessionManager.createOrUpdateSession(username, null, this);
 
                     out.println("LEFT_ROOM " + leftRoom);
@@ -275,7 +271,6 @@ public class ClientHandler {
                 if (this.currentRoom != null) {
                     roomManager.removeUserFromRoom(this.currentRoom, this);
                 }
-                // Invalidate token and remove session
                 if (authToken != null) {
                     tokenService.invalidateToken(authToken);
                 }
@@ -307,24 +302,18 @@ public class ClientHandler {
         this.authenticated = true;
         this.authToken = token;
 
-        // Refresh token
         tokenService.refreshToken(token);
 
-        // Restore session state
         SessionManager.UserSession session = sessionManager.getSession(user);
         if (session != null) {
             this.currentRoom = session.getCurrentRoom();
 
-            // Update client handler in session
             session.setClientHandler(this);
 
-            // Re-join room if user was in one
             if (this.currentRoom != null) {
-                // Remove from old handler and add to new one
                 roomManager.addUserToRoom(this.currentRoom, this);
             }
         } else {
-            // Create new session
             sessionManager.createOrUpdateSession(user, null, this);
         }
     }
@@ -345,7 +334,6 @@ public class ClientHandler {
                 + (username != null ? username : "unauthenticated")
                 + " (port " + socket.getPort() + ")");
 
-        // Close streams and socket
         try {
             if (this.in != null) {
                 in.close();

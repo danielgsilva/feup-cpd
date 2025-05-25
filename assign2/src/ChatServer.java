@@ -33,14 +33,12 @@ public class ChatServer {
         this.scheduler = Executors.newScheduledThreadPool(1);
         this.running = false;
 
-        // Create default rooms
         this.roomManager.createRoom("library");
         this.roomManager.createRoom("cpd");
         this.roomManager.createRoom("ia");
         this.roomManager.createRoom("cg");
         this.roomManager.createRoom("compiladores");
 
-        // Schedule token cleanup every hour
         this.scheduler.scheduleAtFixedRate(this.tokenService::cleanupExpiredTokens, 1, 1, TimeUnit.HOURS);
     }
 
@@ -64,7 +62,6 @@ public class ChatServer {
                             + clientSocket.getInetAddress().getHostAddress()
                             + ":" + clientSocket.getPort());
 
-                    // Create a virtual thread to handle this client
                     Thread.startVirtualThread(() -> handleClient(clientSocket));
 
                 } catch (IOException e) {
@@ -92,7 +89,6 @@ public class ChatServer {
             try {
                 clientSocket.close();
             } catch (IOException ex) {
-                // Ignore close exceptions
             }
         }
     }
@@ -125,7 +121,6 @@ public class ChatServer {
 
         ChatServer server = new ChatServer(port);
 
-        // Add shutdown hook for graceful shutdown
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutting down server...");
             server.stop();

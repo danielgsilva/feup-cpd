@@ -48,7 +48,6 @@ public class AuthenticationService {
         Path path = Paths.get(USERS_FILE);
 
         if (!Files.exists(path)) {
-            // Create default admin user
             registerUser("admin", "admin");
             return;
         }
@@ -164,7 +163,6 @@ public class AuthenticationService {
 
             return hexString.toString();
         } catch (NoSuchAlgorithmException e) {
-            // Fall back to plain text if hashing not available
             System.err.println("Warning: Password hashing not available. Using plaintext.");
             return password;
         }

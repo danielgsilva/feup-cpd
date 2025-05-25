@@ -17,12 +17,12 @@ public class ClientConsoleUI implements ChatClientListener {
     // These are used to wait for server responses
     // Since our solution is asynchronous, we can get a better user experience
     // by waiting for server responses before proceeding with the UI flow
+
     private CountDownLatch authLatch;
     private CountDownLatch roomListLatch;
     private CountDownLatch joinRoomLatch;
     private CountDownLatch leaveRoomLatch;
 
-    // Default AI prompt
     private static final String DEFAULT_AI_PROMPT
             = "You are a helpful assistant. Answer questions briefly and clearly.";
 
@@ -45,27 +45,24 @@ public class ClientConsoleUI implements ChatClientListener {
     public void start() {
         running = true;
 
-        // Connect to server
         if (!client.connect()) {
             System.out.println("Failed to connect to server. Exiting.");
             return;
         }
         System.out.println("Connected to server.");
 
-        // Main input loop
         while (running) {
             if (!client.isAuthenticated()) {
                 showAuthMenu();
-                headerShown = false; // Reset header flag when leaving chat
+                headerShown = false;
             } else if (client.getCurrentRoom() == null) {
                 showRoomMenu();
-                headerShown = false; // Reset header flag when leaving chat
+                headerShown = false;
             } else {
                 showChatInterface();
             }
         }
 
-        // Disconnect
         client.disconnect();
         System.out.println("Disconnected from server.");
     }
@@ -162,7 +159,6 @@ public class ClientConsoleUI implements ChatClientListener {
                 authLatch = new CountDownLatch(1);
                 client.logout();
                 try {
-                    // Wait up to 3 seconds for registration response
                     if (!running) return;
                     if (!authLatch.await(3, TimeUnit.SECONDS)) {
                         System.out.println("Server response timeout. Please try again.");
@@ -187,7 +183,6 @@ public class ClientConsoleUI implements ChatClientListener {
      * Show the chat interface.
      */
     private void showChatInterface() {
-        // Show header only once when entering the room
         if (!headerShown) {
             System.out.println("\n╔═══════════════════════════════════════════════════════════════════════════╗");
             System.out.println("║ Room: " + padRight(client.getCurrentRoom(), 67) + " ║");
@@ -210,8 +205,6 @@ public class ClientConsoleUI implements ChatClientListener {
             } catch (InterruptedException e) {
                 System.err.println("Interrupted while waiting to leave room.");
             }
-            // Don't call showChatInterface() again - let the main loop handle it
-            // This will make it return to the room menu
             return;
         } else if (input.equals("/quit")) {
             exitApplication();
@@ -220,7 +213,6 @@ public class ClientConsoleUI implements ChatClientListener {
             client.sendMessage(input);
             showChatInterface();
         } else {
-            // Empty message, stay in chat interface
             showChatInterface();
         }
     }
@@ -244,13 +236,11 @@ public class ClientConsoleUI implements ChatClientListener {
         System.out.print("Password: ");
         String password = scanner.nextLine();
 
-        // Create a latch to wait for response
         authLatch = new CountDownLatch(1);
 
         client.login(username, password);
 
         try {
-            // Wait up to 5 seconds for authentication response
             if (!authLatch.await(5, TimeUnit.SECONDS)) {
                 System.out.println("Server response timeout. Please try again.");
             }
@@ -268,13 +258,11 @@ public class ClientConsoleUI implements ChatClientListener {
         System.out.print("Password: ");
         String password = scanner.nextLine();
 
-        // Create a latch to wait for response
         authLatch = new CountDownLatch(1);
 
         client.register(username, password);
 
         try {
-            // Wait up to 5 seconds for registration response
             if (!authLatch.await(5, TimeUnit.SECONDS)) {
                 System.out.println("Server response timeout. Please try again.");
             }
@@ -290,14 +278,11 @@ public class ClientConsoleUI implements ChatClientListener {
         System.out.print("Room name: ");
         String roomName = scanner.nextLine();
 
-        // Wait a moment for room creation
         try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
-            // Ignore
         }
 
-        // Automatically join the room
         System.out.println("Joining room automatically...");
         joinRoomLatch = new CountDownLatch(1);
         client.joinRoom(roomName);
@@ -316,17 +301,13 @@ public class ClientConsoleUI implements ChatClientListener {
         System.out.print("AI Room name: ");
         String roomName = scanner.nextLine();
 
-        // Use default prompt instead of asking the user
         client.createAiRoom(roomName, DEFAULT_AI_PROMPT);
 
-        // Wait a moment for room creation
         try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
-            // Ignore
         }
 
-        // Automatically join the room
         System.out.println("Joining AI room automatically...");
         joinRoomLatch = new CountDownLatch(1);
         client.joinRoom(roomName);
@@ -432,7 +413,7 @@ public class ClientConsoleUI implements ChatClientListener {
 
                     if (roomName.equals(client.getCurrentRoom())) {
                         System.out.println(messageContent);
-                        System.out.print("> "); // Show prompt again
+                        System.out.print("> ");
                     }
                 }
                 break;

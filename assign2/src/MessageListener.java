@@ -41,7 +41,6 @@ public class MessageListener implements Runnable {
                 }
 
                 final String msg = message;
-                // Process the message on a virtual thread to avoid blocking
                 Thread.startVirtualThread(() -> client.handleServerMessage(msg));
             }
 
