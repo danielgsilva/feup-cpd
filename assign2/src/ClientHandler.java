@@ -139,13 +139,11 @@ public class ClientHandler {
                     String user = parts[1];
                     String pass = parts[2];
                     if (authService.authenticateUser(user, pass)) {
-                        if (!authService.tryLogin(user)) {
-                            out.println("LOGIN_FAILURE User already logged in.");
-                            return;
-                        }
                         this.username = user;
                         this.authenticated = true;
-                        out.println("LOGIN_SUCCESS");
+                        this.authToken = tokenService.generateToken(user);
+                        sessionManager.createOrUpdateSession(user, null, this);
+                        out.println("LOGIN_SUCCESS " + authToken);
                     } else {
                         out.println("LOGIN_FAILURE");
                     }
@@ -221,12 +219,15 @@ public class ClientHandler {
                 if (parts.length >= 2) {
                     String roomName = parts[1];
 
+                    // Leave current room if any
                     if (this.currentRoom != null) {
                         roomManager.removeUserFromRoom(this.currentRoom, this);
                     }
 
+                    // Join new room
                     if (roomManager.addUserToRoom(roomName, this)) {
                         this.currentRoom = roomName;
+                        // Update session
                         sessionManager.createOrUpdateSession(username, currentRoom, this);
                         out.println("JOINED " + roomName);
                     } else {
@@ -243,6 +244,7 @@ public class ClientHandler {
                     String leftRoom = this.currentRoom;
                     this.currentRoom = null;
 
+                    // Update session
                     sessionManager.createOrUpdateSession(username, null, this);
 
                     out.println("LEFT_ROOM " + leftRoom);
@@ -271,13 +273,11 @@ public class ClientHandler {
                 if (this.currentRoom != null) {
                     roomManager.removeUserFromRoom(this.currentRoom, this);
                 }
+                // Invalidate token and remove session
                 if (authToken != null) {
                     tokenService.invalidateToken(authToken);
                 }
                 sessionManager.removeSession(username);
-                if (this.authenticated && this.username != null) {
-                    authService.logout(this.username);
-                }                
                 this.authenticated = false;
                 this.username = null;
                 this.currentRoom = null;
@@ -302,18 +302,24 @@ public class ClientHandler {
         this.authenticated = true;
         this.authToken = token;
 
+        // Refresh token
         tokenService.refreshToken(token);
 
+        // Restore session state
         SessionManager.UserSession session = sessionManager.getSession(user);
         if (session != null) {
             this.currentRoom = session.getCurrentRoom();
 
+            // Update client handler in session
             session.setClientHandler(this);
 
+            // Re-join room if user was in one
             if (this.currentRoom != null) {
+                // Remove from old handler and add to new one
                 roomManager.addUserToRoom(this.currentRoom, this);
             }
         } else {
+            // Create new session
             sessionManager.createOrUpdateSession(user, null, this);
         }
     }
@@ -322,9 +328,6 @@ public class ClientHandler {
      * Clean up resources when the connection is closed.
      */
     private void cleanup() {
-        if (this.authenticated && this.username != null) {
-            authService.logout(this.username);
-        }        
         this.running = false;
 
         // Note: We don't remove the user from rooms or invalidate tokens here
@@ -334,6 +337,7 @@ public class ClientHandler {
                 + (username != null ? username : "unauthenticated")
                 + " (port " + socket.getPort() + ")");
 
+        // Close streams and socket
         try {
             if (this.in != null) {
                 in.close();
