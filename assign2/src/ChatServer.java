@@ -1,10 +1,9 @@
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.*;
 
 /**
  * Main server class for the chat application. Listens for client connections
@@ -50,13 +49,17 @@ public class ChatServer {
      */
     public void start() {
         running = true;
+        System.setProperty("javax.net.ssl.keyStore", "keystore.jks");
+        System.setProperty("javax.net.ssl.keyStorePassword", "password");
 
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
+        SSLServerSocketFactory sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+
+        try (SSLServerSocket serverSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(port)) {
             System.out.println("Server started on port " + port);
 
             while (running) {
                 try {
-                    Socket clientSocket = serverSocket.accept();
+                    SSLSocket clientSocket = (SSLSocket) serverSocket.accept();
                     System.out.println("New client connected: "
                             + clientSocket.getInetAddress().getHostAddress()
                             + ":" + clientSocket.getPort());
@@ -80,7 +83,7 @@ public class ChatServer {
      *
      * @param clientSocket The socket for the client connection
      */
-    private void handleClient(Socket clientSocket) {
+    private void handleClient(SSLSocket clientSocket) {
         try {
             ClientHandler handler = new ClientHandler(clientSocket, authService, roomManager, tokenService, sessionManager);
             handler.handle();

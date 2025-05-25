@@ -10,6 +10,14 @@ Group members:
 
 ## Distributed Systems Assignment
 
+### Ollama
+
+- To start virtual machine 
+    - `sudo docker run -d -v ollama:/root/.ollama -p 11434:11434 --name ollama14 ollama/ollama`
+
+- To test
+    - `sudo docker exec -it ollama14 ollama run llama3`
+
 ### How to Compile
 
 - `javac -d out *.java`
@@ -42,6 +50,9 @@ Group members:
     - SERVER: `ROOMS <room1> <room2> <room3> ...`
     <br><br>
     - CLIENT: `CREATE_ROOM <roomName>`
+    - SERVER: `ROOM_CREATED <roomName>` or `ROOM_EXISTS <roomName>`
+    <br><br>
+    - CLIENT: `CREATE_AI_ROOM <roomName> <prompt>`
     - SERVER: `ROOM_CREATED <roomName>` or `ROOM_EXISTS <roomName>`
     <br><br>
     - CLIENT: `JOIN_ROOM <roomName>`

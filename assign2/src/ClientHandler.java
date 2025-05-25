@@ -3,7 +3,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.Socket;
+import javax.net.ssl.*;
 
 /**
  * Handles a client connection. Manages authentication, room operations, and
@@ -12,7 +12,7 @@ import java.net.Socket;
  */
 public class ClientHandler {
 
-    private final Socket socket;
+    private final SSLSocket socket;
     private final AuthenticationService authService;
     private final RoomManager roomManager;
     private final TokenService tokenService;
@@ -34,7 +34,7 @@ public class ClientHandler {
      * @param tokenService The token service
      * @param sessionManager The session manager
      */
-    public ClientHandler(Socket socket, AuthenticationService authService, RoomManager roomManager, TokenService tokenService,
+    public ClientHandler(SSLSocket socket, AuthenticationService authService, RoomManager roomManager, TokenService tokenService,
             SessionManager sessionManager) {
         this.socket = socket;
         this.authService = authService;
@@ -192,6 +192,20 @@ public class ClientHandler {
                 if (parts.length >= 2) {
                     String roomName = parts[1];
                     if (roomManager.createRoom(roomName)) {
+                        out.println("ROOM_CREATED " + roomName);
+                    } else {
+                        out.println("ROOM_EXISTS " + roomName);
+                    }
+                } else {
+                    out.println("INVALID_COMMAND");
+                }
+                break;
+
+            case "CREATE_AI_ROOM":
+                if (parts.length >= 3) {
+                    String roomName = parts[1];
+                    String prompt = parts[2];
+                    if (roomManager.createAiRoom(roomName, prompt)) {
                         out.println("ROOM_CREATED " + roomName);
                     } else {
                         out.println("ROOM_EXISTS " + roomName);

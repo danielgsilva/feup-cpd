@@ -14,9 +14,16 @@ public class ClientConsoleUI implements ChatClientListener {
 
     // Latches for synchronization
     // These are used to wait for server responses
+    // Since our solution is asynchronous, we can get a better user experience
+    // by waiting for server responses before proceeding with the UI flow
     private CountDownLatch authLatch;
     private CountDownLatch roomListLatch;
     private CountDownLatch joinRoomLatch;
+    private CountDownLatch leaveRoomLatch;
+
+    // Default AI prompt
+    private static final String DEFAULT_AI_PROMPT
+            = "You are a helpful assistant. Answer questions briefly and clearly.";
 
     /**
      * Create a new console UI.
@@ -98,9 +105,10 @@ public class ClientConsoleUI implements ChatClientListener {
         System.out.println("\nRoom Menu");
         System.out.println("1. List rooms");
         System.out.println("2. Create room");
-        System.out.println("3. Join room");
-        System.out.println("4. Logout");
-        System.out.println("5. Exit");
+        System.out.println("3. Create AI room");
+        System.out.println("4. Join room");
+        System.out.println("5. Logout");
+        System.out.println("6. Exit");
         System.out.println("Choose an option: ");
 
         String choice = scanner.nextLine();
@@ -123,6 +131,10 @@ public class ClientConsoleUI implements ChatClientListener {
                 break;
 
             case "3":
+                createAiRoom();
+                break;
+
+            case "4":
                 joinRoomLatch = new CountDownLatch(1);
 
                 joinRoom();
@@ -134,7 +146,7 @@ public class ClientConsoleUI implements ChatClientListener {
                 }
                 break;
 
-            case "4":
+            case "5":
                 authLatch = new CountDownLatch(1);
                 client.logout();
                 try {
@@ -143,11 +155,11 @@ public class ClientConsoleUI implements ChatClientListener {
                         System.out.println("Server response timeout. Please try again.");
                     }
                 } catch (InterruptedException e) {
-                    System.err.println("Registration interrupted.");
+                    System.err.println("Logout interrupted.");
                 }
                 break;
 
-            case "5":
+            case "6":
                 running = false;
                 break;
 
@@ -230,6 +242,34 @@ public class ClientConsoleUI implements ChatClientListener {
         String roomName = scanner.nextLine();
 
         client.createRoom(roomName);
+    }
+
+    /**
+     * Create a new AI chat room.
+     */
+    private void createAiRoom() {
+        System.out.print("AI Room name: ");
+        String roomName = scanner.nextLine();
+
+        // Use default prompt instead of asking the user
+        client.createAiRoom(roomName, DEFAULT_AI_PROMPT);
+
+        // Wait a moment for room creation
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            // Ignore
+        }
+
+        // Automatically join the room
+        System.out.println("Joining AI room automatically...");
+        joinRoomLatch = new CountDownLatch(1);
+        client.joinRoom(roomName);
+        try {
+            joinRoomLatch.await(3, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            System.err.println("Interrupted while waiting to join AI room.");
+        }
     }
 
     /**

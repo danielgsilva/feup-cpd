@@ -3,11 +3,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  * Client for the chat application. Handles connection to the server and
@@ -18,7 +19,8 @@ public class ChatClient {
 
     private String host;
     private int port;
-    private Socket socket;
+    private SSLSocket socket;
+    private SSLSocketFactory sslSocketFactory;
     private PrintWriter out;
     private BufferedReader in;
     private MessageListener listener;
@@ -60,7 +62,12 @@ public class ChatClient {
      */
     public boolean connect() {
         try {
-            socket = new Socket(host, port);
+            System.setProperty("javax.net.ssl.trustStore", "truststore.jks");
+            System.setProperty("javax.net.ssl.trustStorePassword", "password");
+
+            sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            socket = (SSLSocket) sslSocketFactory.createSocket(host, port);
+
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
@@ -181,8 +188,12 @@ public class ChatClient {
             // Close existing resources
             closeResources();
 
-            // Create new connection
-            socket = new Socket(host, port);
+            System.setProperty("javax.net.ssl.trustStore", "truststore.jks");
+            System.setProperty("javax.net.ssl.trustStorePassword", "password");
+
+            sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            socket = (SSLSocket) sslSocketFactory.createSocket(host, port);
+
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
@@ -339,6 +350,18 @@ public class ChatClient {
     public void createRoom(String roomName) {
         if (connected && authenticated) {
             out.println("CREATE_ROOM " + roomName);
+        }
+    }
+
+    /**
+     * Create a new AI chat room.
+     *
+     * @param roomName The name of the room
+     * @param prompt The initial prompt/instructions for the AI
+     */
+    public void createAiRoom(String roomName, String prompt) {
+        if (connected && authenticated) {
+            out.println("CREATE_AI_ROOM " + roomName + " " + prompt);
         }
     }
 

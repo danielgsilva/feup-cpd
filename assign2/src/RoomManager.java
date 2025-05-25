@@ -44,6 +44,27 @@ public class RoomManager {
     }
 
     /**
+     * Create a new AI room with the given name and prompt.
+     *
+     * @param name The name of the room
+     * @param prompt The initial prompt/instructions for the AI
+     * @return true if the room was created, false if a room with that name
+     * already exists
+     */
+    public boolean createAiRoom(String name, String prompt) {
+        lock.writeLock().lock();
+        try {
+            if (rooms.containsKey(name)) {
+                return false;
+            }
+            rooms.put(name, new AiRoom(name, prompt));
+            return true;
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    /**
      * Get a room by name.
      *
      * @param name The name of the room
