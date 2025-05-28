@@ -30,6 +30,15 @@ Group members:
 - `java -cp out ChatServer.java 1234`
 - `java -cp out ClientConsoleUI localhost 1234`  
 
+### User Credentials
+
+- **Users**: biab, bias, daniel
+- **Password**: 1234
+
+### Debug Server Message
+
+- `ChatClient.java`: Uncomment line 391 - method *handleServerMessage()*
+
 ### Protocol
 
 - **Authentication**
@@ -66,3 +75,5 @@ Group members:
 - **Messaging**
     - CLIENT: `MESSAGE <roomName> <messageContent>`
     - SERVER: `MESSAGE <roomName> <username> <messageContent>` (broadcast to all users in room)
+
+
