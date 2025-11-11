@@ -1,6 +1,8 @@
 # CPD Projects
 
-CPD Projects of group T03G11.
+CPD Projects of group T03G11:
+- [Assignment 1](#parallel-computing-assignment)
+- [Assignment 2](#distributed-systems-assignment)
 
 Group members:
 
