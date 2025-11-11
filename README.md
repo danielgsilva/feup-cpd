@@ -4,11 +4,14 @@ CPD Projects of group T03G11.
 
 Group members:
 
-1. Beatriz Bernardo (up202206097@up.pt)
-2. Beatriz Sonnemberg (up202206098@up.pt)
-3. Daniel Silva (up201909935@up.pt)
+1. Beatriz Bernardo 
+2. Beatriz Sonnemberg 
+3. Daniel Silva 
 
-## Distributed Systems Assignment
+## [Distributed Systems Assignment](./assign2/)
+#### Grade: 18.25/20
+
+This project implements a concurrent client-server chat system in Java using TCP sockets. The system allows authenticated users to exchange text messages in different chat rooms, including special AI-powered rooms that integrate with a local LLM (Ollama).
 
 ### Ollama
 
